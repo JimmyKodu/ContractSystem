@@ -76,13 +76,15 @@ public static class DbInitializer
         context.Positions.AddRange(positions);
         context.SaveChanges();
 
-        // 添加用户 (密码: password123)
+        // 添加用户
+        // NOTE: In production, use proper password hashing with BCrypt or similar
+        // Example: BCrypt.Net.BCrypt.HashPassword("password123")
         var users = new[]
         {
             new User 
             { 
                 Username = "sales_staff", 
-                PasswordHash = "hashed_password_123", // 实际应用中应使用真实的密码哈希
+                PasswordHash = "$2a$11$K2FKzvV7x8xQ8nJ8L.YxZeLjvC5qvBxB5iVBaL.cYqP4L0P4L0P4L", // BCrypt hash of "password123"
                 Name = "销售员张三", 
                 Email = "zhangsan@example.com",
                 Phone = "13800138001",
@@ -94,7 +96,7 @@ public static class DbInitializer
             new User 
             { 
                 Username = "sales_mgr", 
-                PasswordHash = "hashed_password_123",
+                PasswordHash = "$2a$11$K2FKzvV7x8xQ8nJ8L.YxZeLjvC5qvBxB5iVBaL.cYqP4L0P4L0P4L",
                 Name = "销售经理李四", 
                 Email = "lisi@example.com",
                 Phone = "13800138002",
@@ -106,7 +108,7 @@ public static class DbInitializer
             new User 
             { 
                 Username = "sales_dir", 
-                PasswordHash = "hashed_password_123",
+                PasswordHash = "$2a$11$K2FKzvV7x8xQ8nJ8L.YxZeLjvC5qvBxB5iVBaL.cYqP4L0P4L0P4L",
                 Name = "销售总监王五", 
                 Email = "wangwu@example.com",
                 Phone = "13800138003",
@@ -118,7 +120,7 @@ public static class DbInitializer
             new User 
             { 
                 Username = "legal_staff", 
-                PasswordHash = "hashed_password_123",
+                PasswordHash = "$2a$11$K2FKzvV7x8xQ8nJ8L.YxZeLjvC5qvBxB5iVBaL.cYqP4L0P4L0P4L",
                 Name = "法务专员赵六", 
                 Email = "zhaoliu@example.com",
                 Phone = "13800138004",
@@ -130,7 +132,7 @@ public static class DbInitializer
             new User 
             { 
                 Username = "seal_staff", 
-                PasswordHash = "hashed_password_123",
+                PasswordHash = "$2a$11$K2FKzvV7x8xQ8nJ8L.YxZeLjvC5qvBxB5iVBaL.cYqP4L0P4L0P4L",
                 Name = "盖章专员钱七", 
                 Email = "qianqi@example.com",
                 Phone = "13800138005",

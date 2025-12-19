@@ -53,14 +53,33 @@ public class PdfService : IPdfService
             var totalPages = reader.NumberOfPages;
             var content = stamper.GetOverContent(totalPages);
 
-            // 添加审批链信息到最后一页
-            var baseFont = BaseFont.CreateFont("STSong-Light", "UniGB-UCS2-H", BaseFont.NOT_EMBEDDED);
+            // Try to create a font that works across systems
+            BaseFont baseFont;
+            try
+            {
+                // Try Chinese font first
+                baseFont = BaseFont.CreateFont("STSong-Light", "UniGB-UCS2-H", BaseFont.NOT_EMBEDDED);
+            }
+            catch
+            {
+                try
+                {
+                    // Fallback to Arial Unicode MS for broader compatibility
+                    baseFont = BaseFont.CreateFont("Arial Unicode MS", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
+                }
+                catch
+                {
+                    // Final fallback to Helvetica (always available)
+                    baseFont = BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
+                }
+            }
+
             content.BeginText();
             content.SetFontAndSize(baseFont, 10);
 
             float yPosition = 200;
             content.SetTextMatrix(50, yPosition);
-            content.ShowText("合同审批链：");
+            content.ShowText("Contract Approval Chain / 合同审批链:");
 
             yPosition -= 20;
             foreach (var approval in approvalChain)

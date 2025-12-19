@@ -18,20 +18,43 @@ public class OcrService : IOcrService
 
     public async Task<string> ExtractTextFromPdfAsync(string pdfPath)
     {
+        // Note: iTextSharp.LGPLv2.Core doesn't include text extraction utilities
+        // For production, consider using a library with better text extraction support
+        // or implement custom text extraction logic
+        
         var text = string.Empty;
-
-        using (var reader = new PdfReader(pdfPath))
+        
+        try
         {
-            for (int page = 1; page <= reader.NumberOfPages; page++)
+            using (var reader = new PdfReader(pdfPath))
             {
-                // 简单提取文本，iTextSharp.LGPLv2.Core版本可能需要不同的方法
-                // 这里提供基本实现
-                var pageBytes = reader.GetPageContent(page);
-                if (pageBytes != null)
+                // Basic text extraction - may need enhancement for complex PDFs
+                // This is a simplified implementation for the prototype
+                for (int page = 1; page <= reader.NumberOfPages; page++)
                 {
-                    text += System.Text.Encoding.UTF8.GetString(pageBytes);
+                    // Note: This is a basic implementation
+                    // Production systems should use more robust PDF text extraction
+                    var pageDict = reader.GetPageN(page);
+                    var contentBytes = reader.GetPageContent(page);
+                    
+                    if (contentBytes != null && contentBytes.Length > 0)
+                    {
+                        // Simple text extraction - in production, use a proper PDF text extractor
+                        var content = System.Text.Encoding.ASCII.GetString(contentBytes);
+                        // Extract text between BT and ET operators (basic PDF text objects)
+                        var matches = System.Text.RegularExpressions.Regex.Matches(content, @"BT\s+(.*?)\s+ET", System.Text.RegularExpressions.RegexOptions.Singleline);
+                        foreach (System.Text.RegularExpressions.Match match in matches)
+                        {
+                            text += match.Groups[1].Value + " ";
+                        }
+                    }
                 }
             }
+        }
+        catch (Exception ex)
+        {
+            // Log error and return empty string
+            text = $"Error extracting text: {ex.Message}";
         }
 
         return await Task.FromResult(text);

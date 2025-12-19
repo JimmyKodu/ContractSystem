@@ -64,6 +64,9 @@ public class ContractWorkflowService : IContractWorkflowService
             throw new ArgumentException("合同不存在");
         }
 
+        // 记录当前状态对应的审批角色
+        var currentRole = GetRoleByStatus(contract.Status);
+
         // 根据当前状态和操作更新合同状态
         if (action == ApprovalAction.Reject)
         {
@@ -76,13 +79,13 @@ public class ContractWorkflowService : IContractWorkflowService
 
         contract.UpdatedAt = DateTime.UtcNow;
 
-        // 记录审批
+        // 记录审批 - 使用保存的当前角色
         var approval = new ContractApproval
         {
             ContractId = contractId,
             ApprovedByUserId = userId,
             Action = action,
-            Role = GetRoleByStatus(contract.Status),
+            Role = currentRole,
             Comments = comments,
             SignatureData = signatureData ?? string.Empty,
             ApprovedAt = DateTime.UtcNow
