@@ -6,6 +6,7 @@ const pdfService = require('../services/pdfService');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
 
 // 配置文件上传
 const storage = multer.diskStorage({
@@ -17,8 +18,10 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + '-' + file.originalname);
+    // 使用UUID确保文件名唯一性和安全性
+    const ext = path.extname(file.originalname);
+    const safeFilename = uuidv4() + ext;
+    cb(null, safeFilename);
   }
 });
 

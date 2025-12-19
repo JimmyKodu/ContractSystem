@@ -4,6 +4,7 @@ const router = express.Router();
 const { getDatabase } = require('../models/database');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { loginLimiter, apiLimiter } = require('../middleware/rateLimit');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'contract-system-secret-key';
 
@@ -11,7 +12,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'contract-system-secret-key';
  * 用户登录
  * POST /api/users/login
  */
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
     const db = getDatabase();
@@ -67,7 +68,7 @@ router.post('/login', async (req, res) => {
  * 获取当前用户信息
  * GET /api/users/me
  */
-router.get('/me', async (req, res) => {
+router.get('/me', apiLimiter, async (req, res) => {
   try {
     // 从请求头获取token
     const token = req.headers.authorization?.replace('Bearer ', '');
@@ -113,7 +114,7 @@ router.get('/me', async (req, res) => {
  * 获取用户列表
  * GET /api/users
  */
-router.get('/', async (req, res) => {
+router.get('/', apiLimiter, async (req, res) => {
   try {
     const db = getDatabase();
     const users = db.prepare('SELECT id, username, name, role, department_id, department_name FROM users WHERE is_active = 1').all();
@@ -133,7 +134,7 @@ router.get('/', async (req, res) => {
  * 根据角色获取用户
  * GET /api/users/role/:role
  */
-router.get('/role/:role', async (req, res) => {
+router.get('/role/:role', apiLimiter, async (req, res) => {
   try {
     const db = getDatabase();
     const users = db.prepare('SELECT id, username, name, role, department_id, department_name FROM users WHERE role = ? AND is_active = 1').all(req.params.role);
@@ -153,7 +154,7 @@ router.get('/role/:role', async (req, res) => {
  * 更新用户签名图片
  * PUT /api/users/:id/signature
  */
-router.put('/:id/signature', async (req, res) => {
+router.put('/:id/signature', apiLimiter, async (req, res) => {
   try {
     const { signatureImageUrl } = req.body;
     const db = getDatabase();

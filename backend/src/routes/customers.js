@@ -3,6 +3,10 @@ const express = require('express');
 const router = express.Router();
 const { getDatabase } = require('../models/database');
 const { v4: uuidv4 } = require('uuid');
+const { apiLimiter } = require('../middleware/rateLimit');
+
+// 对所有客户路由应用速率限制
+router.use(apiLimiter);
 
 /**
  * 获取客户列表

@@ -18,17 +18,28 @@ function calculateFileHash(filePath) {
   });
 }
 
+// OCR配置 - 可以通过环境变量配置
+const OCR_LANGUAGE = process.env.OCR_LANGUAGE || 'chi_sim+eng';
+const OCR_TIMEOUT = parseInt(process.env.OCR_TIMEOUT, 10) || 60000; // 默认60秒超时
+
 /**
  * OCR识别图片或PDF中的文本
  */
 async function extractTextFromImage(imagePath) {
   try {
-    const result = await Tesseract.recognize(imagePath, 'chi_sim+eng', {
-      logger: (m) => console.log(m)
+    // 添加超时机制
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('OCR处理超时')), OCR_TIMEOUT);
     });
+    
+    const ocrPromise = Tesseract.recognize(imagePath, OCR_LANGUAGE, {
+      logger: process.env.NODE_ENV === 'development' ? (m) => console.log(m) : undefined
+    });
+    
+    const result = await Promise.race([ocrPromise, timeoutPromise]);
     return result.data.text;
   } catch (error) {
-    console.error('OCR识别错误:', error);
+    console.error('OCR识别错误:', error.message);
     throw error;
   }
 }
@@ -124,6 +135,32 @@ async function addApprovalChainToPdf(pdfPath, approvalRecords, outputPath) {
     const { width, height } = page.getSize();
     let y = height - 50;
     
+    // 列配置 - 便于维护和调整
+    const columns = {
+      no: { x: 50, width: 30, label: 'No.' },
+      role: { x: 80, width: 120, label: 'Role' },
+      user: { x: 200, width: 80, label: 'User' },
+      time: { x: 280, width: 120, label: 'Time' },
+      type: { x: 400, width: 100, label: 'Type' }
+    };
+    
+    // 角色和类型映射
+    const roleMap = {
+      'salesperson': 'Salesperson/销售员',
+      'sales_manager': 'Sales Manager/销售经理',
+      'sales_director': 'Sales Director/销售总监',
+      'legal_staff': 'Legal Staff/法务',
+      'seal_keeper': 'Seal Keeper/落章人'
+    };
+    
+    const typeMap = {
+      'submit': 'Submit/提交',
+      'approve': 'Approve/批准',
+      'reject': 'Reject/拒绝',
+      'legal_review': 'Legal Review/法务审核',
+      'seal': 'Seal/落章'
+    };
+    
     // 标题
     page.drawText('Contract Approval Chain / 合同审批链', {
       x: 50,
@@ -136,12 +173,14 @@ async function addApprovalChainToPdf(pdfPath, approvalRecords, outputPath) {
     y -= 40;
     
     // 表头
-    page.drawText('No.    Role                User            Time                    Type', {
-      x: 50,
-      y: y,
-      size: 10,
-      font,
-      color: rgb(0.3, 0.3, 0.3)
+    Object.values(columns).forEach(col => {
+      page.drawText(col.label, {
+        x: col.x,
+        y: y,
+        size: 10,
+        font,
+        color: rgb(0.3, 0.3, 0.3)
+      });
     });
     
     y -= 5;
@@ -156,35 +195,16 @@ async function addApprovalChainToPdf(pdfPath, approvalRecords, outputPath) {
     
     // 审批记录
     approvalRecords.forEach((record, index) => {
-      const roleMap = {
-        'salesperson': 'Salesperson/销售员',
-        'sales_manager': 'Sales Manager/销售经理',
-        'sales_director': 'Sales Director/销售总监',
-        'legal_staff': 'Legal Staff/法务',
-        'seal_keeper': 'Seal Keeper/落章人'
-      };
-      
-      const typeMap = {
-        'submit': 'Submit/提交',
-        'approve': 'Approve/批准',
-        'reject': 'Reject/拒绝',
-        'legal_review': 'Legal Review/法务审核',
-        'seal': 'Seal/落章'
-      };
-      
       const role = roleMap[record.user_role] || record.user_role;
       const type = typeMap[record.type] || record.type;
       const time = new Date(record.timestamp).toLocaleString('zh-CN');
       
-      const text = `${index + 1}.     ${role.substring(0, 20).padEnd(20)}  ${(record.user_name || '').padEnd(15)}  ${time.padEnd(20)}  ${type}`;
-      
-      page.drawText(text, {
-        x: 50,
-        y: y,
-        size: 9,
-        font,
-        color: rgb(0, 0, 0)
-      });
+      // 绘制每一列
+      page.drawText(`${index + 1}`, { x: columns.no.x, y, size: 9, font, color: rgb(0, 0, 0) });
+      page.drawText(role.substring(0, 18), { x: columns.role.x, y, size: 9, font, color: rgb(0, 0, 0) });
+      page.drawText((record.user_name || '').substring(0, 10), { x: columns.user.x, y, size: 9, font, color: rgb(0, 0, 0) });
+      page.drawText(time.substring(0, 16), { x: columns.time.x, y, size: 9, font, color: rgb(0, 0, 0) });
+      page.drawText(type.substring(0, 15), { x: columns.type.x, y, size: 9, font, color: rgb(0, 0, 0) });
       
       y -= 25;
       
