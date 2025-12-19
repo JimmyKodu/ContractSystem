@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>H5合同管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px 8px 0 0;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .nav {
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .nav-item {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .nav-item.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            font-weight: bold;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-success {
+            background: #51cf66;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .contract-list {
+            margin-top: 20px;
+        }
+
+        .contract-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .contract-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .contract-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .contract-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .contract-status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: white;
+        }
+
+        .status-draft { background: #868e96; }
+        .status-pending { background: #fab005; }
+        .status-approved { background: #51cf66; }
+        .status-rejected { background: #ff6b6b; }
+        .status-sealed { background: #339af0; }
+
+        .contract-info {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .approval-chain {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .approval-chain h4 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .approval-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+
+        .approval-role {
+            font-weight: bold;
+            margin-right: 10px;
+            color: #667eea;
+        }
+
+        .pdf-viewer {
+            width: 100%;
+            height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+
+        .signature-controls {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .nav-item {
+                font-size: 14px;
+                padding: 12px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>H5合同管理系统</h1>
+            <p>销售合同全流程管理平台</p>
+        </div>
+
+        <div class="nav">
+            <div class="nav-item active" onclick="showTab('list')">合同列表</div>
+            <div class="nav-item" onclick="showTab('create')">创建合同</div>
+            <div class="nav-item" onclick="showTab('approve')">审批中心</div>
+        </div>
+
+        <div class="content">
+            <!-- 合同列表 -->
+            <div id="list-tab" class="tab-pane active">
+                <h3>合同列表</h3>
+                <div class="contract-list" id="contractList">
+                    <p style="text-align: center; color: #999;">加载中...</p>
+                </div>
+            </div>
+
+            <!-- 创建合同 -->
+            <div id="create-tab" class="tab-pane">
+                <h3>创建新合同</h3>
+                <form id="createContractForm">
+                    <div class="form-group">
+                        <label>合同标题 *</label>
+                        <input type="text" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label>合同描述</label>
+                        <textarea name="description"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>客户ID *</label>
+                        <input type="number" name="customerId" required>
+                    </div>
+                    <div class="form-group">
+                        <label>合同金额 *</label>
+                        <input type="number" name="amount" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>模板类型 *</label>
+                        <select name="templateType" required>
+                            <option value="0">公司模板（无需法务审核）</option>
+                            <option value="1">客户模板（需要法务审核）</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>合同文件 (PDF) *</label>
+                        <input type="file" name="file" accept=".pdf" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">提交合同</button>
+                </form>
+            </div>
+
+            <!-- 审批中心 -->
+            <div id="approve-tab" class="tab-pane">
+                <h3>待我审批的合同</h3>
+                <div class="contract-list" id="pendingApprovalList">
+                    <p style="text-align: center; color: #999;">加载中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API base URL - change this based on your deployment
+        const API_BASE = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5050/api'  // Development
+            : '/api';  // Production (assuming same domain)
+
+        // Tab switching
+        function showTab(tabName) {
+            // Update nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Update tab panes
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.remove('active');
+            });
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+
+            // Load data for the tab
+            if (tabName === 'list') {
+                loadContracts();
+            } else if (tabName === 'approve') {
+                loadPendingApprovals();
+            }
+        }
+
+        // Load contracts
+        async function loadContracts() {
+            try {
+                const response = await fetch(`${API_BASE}/Contracts`);
+                const contracts = await response.json();
+                
+                const listHtml = contracts.map(contract => `
+                    <div class="contract-item" onclick="viewContract(${contract.id})">
+                        <div class="contract-item-header">
+                            <div class="contract-title">${contract.title}</div>
+                            <div class="contract-status ${getStatusClass(contract.status)}">
+                                ${getStatusText(contract.status)}
+                            </div>
+                        </div>
+                        <div class="contract-info">
+                            <div>合同编号: ${contract.contractNumber}</div>
+                            <div>客户: ${contract.customerName}</div>
+                            <div>金额: ¥${contract.amount.toFixed(2)}</div>
+                            <div>创建人: ${contract.createdByUserName}</div>
+                            <div>创建时间: ${new Date(contract.createdAt).toLocaleString('zh-CN')}</div>
+                        </div>
+                        ${contract.approvals && contract.approvals.length > 0 ? `
+                        <div class="approval-chain">
+                            <h4>审批链</h4>
+                            ${contract.approvals.map(approval => `
+                                <div class="approval-item">
+                                    <span class="approval-role">${approval.role}</span>
+                                    <span>${approval.approverName} - ${new Date(approval.approvedAt).toLocaleString('zh-CN')}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        ` : ''}
+                    </div>
+                `).join('');
+
+                document.getElementById('contractList').innerHTML = listHtml || '<p style="text-align: center; color: #999;">暂无合同</p>';
+            } catch (error) {
+                console.error('Error loading contracts:', error);
+                document.getElementById('contractList').innerHTML = '<p style="text-align: center; color: #f00;">加载失败</p>';
+            }
+        }
+
+        // Load pending approvals
+        async function loadPendingApprovals() {
+            // This would filter contracts pending current user's approval
+            // For now, just show all contracts
+            await loadContracts();
+            const listElement = document.getElementById('pendingApprovalList');
+            listElement.innerHTML = document.getElementById('contractList').innerHTML;
+        }
+
+        // View contract details
+        function viewContract(contractId) {
+            alert(`查看合同详情 ID: ${contractId}\n\n功能包括:\n- 查看PDF文件\n- 添加签名\n- 审批操作\n- 下载合同`);
+        }
+
+        // Get status class
+        function getStatusClass(status) {
+            const statusMap = {
+                0: 'status-draft',
+                1: 'status-pending',
+                2: 'status-pending',
+                3: 'status-pending',
+                4: 'status-pending',
+                5: 'status-pending',
+                6: 'status-pending',
+                7: 'status-sealed',
+                8: 'status-rejected'
+            };
+            return statusMap[status] || 'status-draft';
+        }
+
+        // Get status text
+        function getStatusText(status) {
+            const statusMap = {
+                0: '草稿',
+                1: '待销售经理审批',
+                2: '待销售总监审批',
+                3: '待法务审核',
+                4: '法务已审核-待销售经理',
+                5: '法务已审核-待销售总监',
+                6: '待盖章',
+                7: '已完成',
+                8: '已拒绝'
+            };
+            return statusMap[status] || '未知';
+        }
+
+        // Create contract form submission
+        document.getElementById('createContractForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            
+            try {
+                const response = await fetch(`${API_BASE}/Contracts`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    alert('合同创建成功！');
+                    e.target.reset();
+                    showTab('list');
+                } else {
+                    alert('合同创建失败，请重试');
+                }
+            } catch (error) {
+                console.error('Error creating contract:', error);
+                alert('网络错误，请检查API服务是否运行');
+            }
+        });
+
+        // Initialize
+        loadContracts();
+    </script>
+</body>
+</html>
