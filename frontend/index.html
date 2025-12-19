@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>H5合同管理系统</title>
+  <link rel="stylesheet" href="./src/assets/styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 登录页面 -->
+    <div id="login-page" class="page active">
+      <div class="login-container">
+        <h1>H5合同管理系统</h1>
+        <form id="login-form">
+          <div class="form-group">
+            <label for="username">用户名</label>
+            <input type="text" id="username" name="username" placeholder="请输入用户名" required>
+          </div>
+          <div class="form-group">
+            <label for="password">密码</label>
+            <input type="password" id="password" name="password" placeholder="请输入密码" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">登录</button>
+        </form>
+        <p class="hint">测试账号: salesperson1 / salesmanager1 / salesdirector1 / legal1 / sealkeeper1<br>密码: 123456</p>
+      </div>
+    </div>
+
+    <!-- 主页面 -->
+    <div id="main-page" class="page">
+      <header class="header">
+        <h2>合同管理系统</h2>
+        <div class="user-info">
+          <span id="user-name"></span>
+          <span id="user-role"></span>
+          <button id="logout-btn" class="btn btn-sm">退出</button>
+        </div>
+      </header>
+      
+      <nav class="nav-tabs">
+        <button class="nav-tab active" data-tab="my-contracts">我的合同</button>
+        <button class="nav-tab" data-tab="pending-approval">待审批</button>
+        <button class="nav-tab" data-tab="create-contract">新建合同</button>
+      </nav>
+
+      <!-- 我的合同列表 -->
+      <div id="my-contracts" class="tab-content active">
+        <div class="contract-list" id="contract-list"></div>
+      </div>
+
+      <!-- 待审批列表 -->
+      <div id="pending-approval" class="tab-content">
+        <div class="contract-list" id="pending-list"></div>
+      </div>
+
+      <!-- 新建合同 -->
+      <div id="create-contract" class="tab-content">
+        <form id="contract-form" class="contract-form">
+          <div class="form-group">
+            <label for="contract-title">合同标题</label>
+            <input type="text" id="contract-title" name="title" placeholder="请输入合同标题" required>
+          </div>
+          <div class="form-group">
+            <label for="contract-type">合同类型</label>
+            <select id="contract-type" name="type" required>
+              <option value="own_template">我方模板（无需法务审核）</option>
+              <option value="customer_template">客户模板（需法务审核）</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="customer-select">选择客户</label>
+            <select id="customer-select" name="customerId" required>
+              <option value="">请选择客户</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="contract-amount">合同金额</label>
+            <input type="number" id="contract-amount" name="amount" placeholder="请输入合同金额" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="contract-content">合同内容/备注</label>
+            <textarea id="contract-content" name="content" rows="4" placeholder="请输入合同内容或备注"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="contract-file">上传合同文件（PDF）</label>
+            <input type="file" id="contract-file" name="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">创建合同</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- 合同详情页面 -->
+    <div id="contract-detail-page" class="page">
+      <header class="header">
+        <button id="back-btn" class="btn btn-sm">返回</button>
+        <h2>合同详情</h2>
+      </header>
+      
+      <div class="contract-detail" id="contract-detail"></div>
+      
+      <!-- 签名区域 -->
+      <div id="signature-section" class="signature-section">
+        <h3>签名确认</h3>
+        <div class="signature-pad-container">
+          <canvas id="signature-pad" width="300" height="150"></canvas>
+          <div class="signature-controls">
+            <button id="clear-signature" class="btn btn-sm">清除</button>
+          </div>
+        </div>
+        
+        <!-- 签名位置拖动 -->
+        <div id="pdf-preview-container" class="pdf-preview-container" style="display:none;">
+          <h4>拖动签名到指定位置</h4>
+          <div id="pdf-preview" class="pdf-preview">
+            <div id="signature-draggable" class="signature-draggable">签名位置</div>
+          </div>
+          <p class="hint">拖动签名框到合适的位置</p>
+        </div>
+        
+        <div class="form-group">
+          <label for="approval-comment">审批意见</label>
+          <textarea id="approval-comment" rows="2" placeholder="请输入审批意见（可选）"></textarea>
+        </div>
+        
+        <div class="action-buttons" id="action-buttons"></div>
+      </div>
+
+      <!-- 合同文件比对 -->
+      <div id="compare-section" class="compare-section" style="display:none;">
+        <h3>合同防篡改检测</h3>
+        <div class="form-group">
+          <label for="compare-file">上传客户回传的合同文件</label>
+          <input type="file" id="compare-file" accept=".pdf,.png,.jpg,.jpeg">
+        </div>
+        <button id="compare-btn" class="btn btn-primary">开始比对</button>
+        <div id="compare-result" class="compare-result"></div>
+      </div>
+
+      <!-- 审批记录 -->
+      <div class="approval-records">
+        <h3>审批记录</h3>
+        <div id="approval-records-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./src/utils/api.js"></script>
+  <script src="./src/utils/signature.js"></script>
+  <script src="./src/main.js"></script>
+</body>
+</html>
